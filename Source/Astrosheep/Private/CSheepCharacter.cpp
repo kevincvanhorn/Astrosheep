@@ -1,0 +1,78 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#include "CSheepCharacter.h"
+#include "CSheepAIController.h"
+#include "..\Public\CSheepCharacter.h"
+#include "Astrosheep/Public/CPlayerController.h"
+#include "Astrosheep/Public/CPawn.h"
+#include "Kismet/GameplayStatics.h"
+
+// Sets default values
+ACSheepCharacter::ACSheepCharacter()
+{
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	bSelected = false;
+	XMoveDepth = 0;
+}
+
+// Called when the game starts or when spawned
+void ACSheepCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	MovementComponent = GetCharacterMovement();
+	SheepController = (ACSheepAIController*)Controller;
+	CPawn = (ACPawn*)UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+
+	OnClicked.AddUniqueDynamic(this, &ACSheepCharacter::OnActorClicked);
+}
+
+void ACSheepCharacter::OnActorClicked(AActor* Target, FKey ButtonPressed)
+{
+	// TODO: should unselect on click anywhere else
+	if (!CPawn) { return; }
+	if (!bSelected) {
+		OnSelected();
+		CPawn->SetActiveSheep(this); // TODO: move this to a playercontroller action
+	}
+	else {
+		OnDeselected();
+		CPawn->DeselectSheep();
+	}
+}
+
+void ACSheepCharacter::OnSelected()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Selected!"));
+	if (CPawn) {
+		CPawn->SetActiveSheep(this);
+	}
+	GetMesh()->SetRenderCustomDepth(true);
+	bSelected = true;
+}
+
+void ACSheepCharacter::OnDeselected()
+{
+	if (CPawn) {
+		CPawn->DeselectSheep();
+	}
+	GetMesh()->SetRenderCustomDepth(false);
+	bSelected = false;
+}
+
+void ACSheepCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+
+void ACSheepCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
+
+void ACSheepCharacter::MoveToLocation(FVector& Location) {
+	if (SheepController) {
+		SheepController->RequestMoveToLocation(FVector(XMoveDepth, Location.Y, Location.Z));
+	}
+}
+
