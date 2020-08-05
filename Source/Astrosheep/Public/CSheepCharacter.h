@@ -19,9 +19,9 @@ protected:
 	
 protected:
 	UCharacterMovementComponent* MovementComponent;
-
 	class ACSheepAIController* SheepController;
 	class ACPawn* CPawn;
+	class ACLevelScriptActor* LevelScriptActor;
 
 protected:
 	UFUNCTION()

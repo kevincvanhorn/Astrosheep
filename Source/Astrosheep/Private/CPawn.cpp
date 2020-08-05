@@ -65,8 +65,14 @@ void ACPawn::DoSelectedAction() {
 	if (ActiveSheep && CController) {
 		float LocX = 0, LocY = 0;
 		CController->GetMousePosition(LocX, LocY);
-		FVector WorldDir, WorldLoc = FVector::ZeroVector;
+		FVector WorldDir, WorldLoc;
 		UGameplayStatics::DeprojectScreenToWorld(CController, FVector2D(LocX, LocY), WorldLoc, WorldDir);
+
+		float Length = -1*(FVector::DotProduct(WorldLoc, FVector(-1, 0, 0))) / FVector::DotProduct(-WorldDir, FVector(-1, 0, 0));
+		WorldLoc = WorldLoc + -WorldDir*Length;
+		//UKismetSystemLibrary::DrawDebugLine(GetWorld(), WorldLoc, WorldLoc-WorldDir*6000, FLinearColor::Red, 10, 5);
+		//UKismetSystemLibrary::DrawDebugLine(GetWorld(), WorldLoc, WorldLoc-WorldDir*Length, FLinearColor::Green, 10, 5);
+		//UKismetSystemLibrary::DrawDebugSphere(GetWorld(), WorldLoc, 100, 12, FLinearColor::Green, 1, 1);
 		ActiveSheep->MoveToLocation(WorldLoc);
 	}
 }
