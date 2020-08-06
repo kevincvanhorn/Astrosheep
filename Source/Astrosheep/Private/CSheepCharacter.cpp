@@ -74,9 +74,6 @@ void ACSheepCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void ACSheepCharacter::MoveToLocation(FVector& Location) {
 	if (SheepController) {
-		//UKismetSystemLibrary::DrawDebugSphere(GetWorld(), Location, 100, 12, FLinearColor::Green, 1, 1);
-		//UKismetSystemLibrary::DrawDebugSphere(GetWorld(), FVector(XMoveDepth, Location.Y, Location.Z), 100, 12, FLinearColor::Blue, 1, 1);
-		
 		FVector RequestedLocation = FVector(XMoveDepth, Location.Y, Location.Z);
 		
 		if (LevelScriptActor) {

@@ -27,38 +27,27 @@ ACPawn::ACPawn()
 	}
 
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
-	
 	CameraPanSpeed = 1.0f;
-	bCameraPanning = false;
+	PanMidPoint = 0.25f;
+	PanMidPointConvInv = 1.0f / (1.0f - PanMidPoint);
 }
 
 void ACPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	CController = Cast<ACPlayerController>(Controller);
-}
 
-void ACPawn::PanCamera(float AxisValue)
-{
-	SetActorLocation(GetActorLocation() + AxisValue*FVector::RightVector*CameraPanSpeed);
+	int32 ViewportX, ViewportY;
+	if (CController) {
+		CController->GetViewportSize(ViewportX, ViewportY);
+	}
+	ViewportXHalfInv = 1.0f / ((float)ViewportX / 2.0f);
+	ViewportMidX = ViewportX / 2.0f;
 }
 
 void ACPawn::MouseAxisX(float AxisValue)
 {
-	// TODO: Camera should continue panning at screen edges. (Query mouse position)
-	if (bCameraPanning) {
-		SetActorLocation(GetActorLocation() + AxisValue * FVector::RightVector * CameraPanSpeed);
-	}
-}
-
-void ACPawn::StartPanning()
-{
-	bCameraPanning = true;
-}
-
-void ACPawn::StopPanning()
-{
-	bCameraPanning = false;
+	SetActorLocation(GetActorLocation() + AxisValue * FVector::RightVector * CameraPanSpeed);
 }
 
 void ACPawn::DoSelectedAction() {
@@ -69,10 +58,7 @@ void ACPawn::DoSelectedAction() {
 		UGameplayStatics::DeprojectScreenToWorld(CController, FVector2D(LocX, LocY), WorldLoc, WorldDir);
 
 		float Length = -1*(FVector::DotProduct(WorldLoc, FVector(-1, 0, 0))) / FVector::DotProduct(-WorldDir, FVector(-1, 0, 0));
-		WorldLoc = WorldLoc + -WorldDir*Length;
-		//UKismetSystemLibrary::DrawDebugLine(GetWorld(), WorldLoc, WorldLoc-WorldDir*6000, FLinearColor::Red, 10, 5);
-		//UKismetSystemLibrary::DrawDebugLine(GetWorld(), WorldLoc, WorldLoc-WorldDir*Length, FLinearColor::Green, 10, 5);
-		//UKismetSystemLibrary::DrawDebugSphere(GetWorld(), WorldLoc, 100, 12, FLinearColor::Green, 1, 1);
+		WorldLoc = WorldLoc - WorldDir*Length;
 		ActiveSheep->MoveToLocation(WorldLoc);
 	}
 }
@@ -80,18 +66,22 @@ void ACPawn::DoSelectedAction() {
 void ACPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (CController) {
+		CController->GetMousePosition(MouseX, MouseY);
+		float AxisValue = -1 * (ViewportMidX - MouseX) * ViewportXHalfInv; // -1 to 1
+		if (FMath::Abs(AxisValue) >= PanMidPoint) {
+			AxisValue = (AxisValue - PanMidPoint*FMath::Sign(AxisValue)) * PanMidPointConvInv;
+			SetActorLocation(GetActorLocation() + AxisValue * FVector::RightVector * CameraPanSpeed);
+		}
+	}
 }
 
 void ACPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	InputComponent->BindAction("MouseR", EInputEvent::IE_Pressed, this, &ACPawn::StartPanning);
-	InputComponent->BindAction("MouseR", EInputEvent::IE_Released, this, &ACPawn::StopPanning);
+	
 	InputComponent->BindAction("MouseR", EInputEvent::IE_Released, this, &ACPawn::DoSelectedAction);
-
-	InputComponent->BindAxis("Pan", this, &ACPawn::PanCamera);
-	InputComponent->BindAxis("MouseX", this, &ACPawn::MouseAxisX);
 }
 
 

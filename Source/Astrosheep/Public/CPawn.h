@@ -25,17 +25,8 @@ protected:
 
 	//  INPUT MOVEMENT
 	UFUNCTION()
-		void PanCamera(float AxisValue);
-
-	UFUNCTION()
 		void MouseAxisX(float AxisValue);
 
-	UFUNCTION()
-		void StartPanning();
-
-	UFUNCTION()
-		void StopPanning();
-	
 	UFUNCTION()
 		void DoSelectedAction();
 
@@ -44,9 +35,6 @@ protected:
 
 protected:
 	class ACPlayerController* CController;
-
-private:
-	bool bCameraPanning;
 
 public:	
 	virtual void Tick(float DeltaTime) override;
@@ -63,4 +51,17 @@ public:
 
 protected:
 	class ACSheepCharacter* ActiveSheep;
+
+
+// PANNING
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float PanMidPoint;
+
+private:
+	float MouseX;
+	float MouseY;
+	float ViewportMidX;
+	float ViewportXHalfInv;
+	float PanMidPointConvInv;
 };
